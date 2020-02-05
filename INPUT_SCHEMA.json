@@ -26,7 +26,7 @@
             "editor": "requestListSources"
         },
         "sessionConfig": {
-            "title": "Options for the sessions",
+            "title": "Session configuration",
             "description": "The configuration for your sessions",
             "type": "object",
             "default": {
@@ -70,6 +70,6 @@
         "password",
         "website",
         "sessionConfig",
-        "fieldMap"
+        "steps"
     ]
 }
