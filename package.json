@@ -1,0 +1,58 @@
+{
+    "name": "apify-login-session",
+    "version": "0.0.1",
+    "description": "Grab a login session for any website for usage on your own actor",
+    "main": "lib/index.js",
+    "scripts": {
+        "compile": "tsc -p tsconfig.json",
+        "start": "node lib/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pocesar/apify-login-session.git"
+    },
+    "keywords": [
+        "apify",
+        "session",
+        "localstorage",
+        "cookies",
+        "user-agent",
+        "sessionstorage"
+    ],
+    "author": {
+        "name": "Paulo Cesar",
+        "url": "https://github.com/pocesar"
+    },
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/pocesar/apify-login-session/issues"
+    },
+    "homepage": "https://github.com/pocesar/apify-login-session#readme",
+    "dependencies": {
+        "apify": "^0.19.1",
+        "lodash.sample": "^4.2.1"
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "(npm run compile || true)"
+        }
+    },
+    "devDependencies": {
+        "@apify/eslint-config": "0.0.3",
+        "@types/cheerio": "^0.22.16",
+        "@types/express": "^4.17.2",
+        "@types/lodash.sample": "^4.2.6",
+        "@types/node": "^13.7.0",
+        "@types/puppeteer": "^2.0.0",
+        "@typescript-eslint/eslint-plugin": "^2.19.0",
+        "@typescript-eslint/parser": "^2.19.0",
+        "eslint": "^6.8.0",
+        "eslint-config-prettier": "^6.10.0",
+        "eslint-plugin-import": "^2.20.1",
+        "eslint-plugin-prettier": "^3.1.2",
+        "husky": "^4.2.1",
+        "prettier": "^1.19.1",
+        "typescript": "^3.7.5"
+    }
+}

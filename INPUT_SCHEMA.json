@@ -1,0 +1,75 @@
+{
+    "title": "login-session",
+    "description": "Grab a session for any website for usage on your own actor",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "username": {
+            "title": "Your username",
+            "description": "The username/email that will be passed to the form",
+            "type": "string",
+            "editor": "textfield"
+        },
+        "password": {
+            "title": "Your password",
+            "description": "The password that will be passed to the form",
+            "type": "string",
+            "editor": "textfield"
+        },
+        "website": {
+            "title": "Website to grab a session from",
+            "description": "The website to get the session from. The login form should be available on the provided url",
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 1,
+            "minItems": 1,
+            "editor": "requestListSources"
+        },
+        "sessionConfig": {
+            "title": "Options for the sessions",
+            "description": "The configuration for your sessions",
+            "type": "object",
+            "default": {
+                "storageName": "login-sessions",
+                "maxAgeSecs": 3600,
+                "maxUsageCount": 100,
+                "maxPoolSize": 100
+            },
+            "prefill": {
+                "storageName": "login-sessions",
+                "maxAgeSecs": 3600,
+                "maxUsageCount": 100,
+                "maxPoolSize": 100
+            },
+            "editor": "json"
+        },
+        "steps": {
+            "title": "Steps",
+            "description": "Each step that should be taken for the login to happen. For multi-stage logins (username then password), provide multiple steps",
+            "type": "array",
+            "prefill": [{
+                "username": "input#email",
+                "password": "input#pass",
+                "submit": "input[type=\"submit\"]",
+                "failed": "[role=\"alert\"]"
+            }],
+            "editor": "json"
+        },
+        "proxyConfiguration": {
+            "title": "Proxy configuration",
+            "type": "object",
+            "description": "Select proxies to be used by your actor.",
+            "prefill": {
+                "useApifyProxy": true
+            },
+            "editor": "proxy"
+        }
+    },
+    "required": [
+        "username",
+        "password",
+        "website",
+        "sessionConfig",
+        "fieldMap"
+    ]
+}
