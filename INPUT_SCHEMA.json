@@ -29,15 +29,30 @@
             "title": "Session configuration",
             "description": "The configuration for your sessions",
             "type": "object",
-            "default": "{ \"storageName\": \"login-sessions\", \"maxAgeSecs\": 3600, \"maxUsageCount\": 100, \"maxPoolSize\": 100 }",
-            "prefill": "{ \"storageName\": \"login-sessions\", \"maxAgeSecs\": 3600, \"maxUsageCount\": 100, \"maxPoolSize\": 100 }",
+            "default": {
+                "storageName": "login-sessions",
+                "maxAgeSecs": 3600,
+                "maxUsageCount": 100,
+                "maxPoolSize": 100
+            },
+            "prefill": {
+                "storageName": "login-sessions",
+                "maxAgeSecs": 3600,
+                "maxUsageCount": 100,
+                "maxPoolSize": 100
+            },
             "editor": "json"
         },
         "steps": {
             "title": "Steps",
             "description": "Each step that should be taken for the login to happen. For multi-stage logins (username then password), provide multiple steps",
             "type": "array",
-            "prefill": "[{ \"username\": \"input#email\", \"password\": \"input#pass\", \"submit\": \"input[type=\\\"submit\\\"]\", \"failed\": \"[role=\\\"alert\\\"]\" }]",
+            "prefill": [{
+                "username": "input#email",
+                "password": "input#pass",
+                "submit": "input[type=\"submit\"]",
+                "failed": "[role=\"alert\"]"
+            }],
             "editor": "json"
         },
         "proxyConfiguration": {
