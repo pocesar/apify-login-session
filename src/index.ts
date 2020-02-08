@@ -21,7 +21,7 @@ Apify.main(async () => {
     const {
         steps,
         password,
-        sessionStorage,
+        sessionConfig,
         username,
         website,
         proxyConfiguration
@@ -42,8 +42,8 @@ Apify.main(async () => {
         createSessionFunction: pool => {
             const session = new Apify.Session({
                 ...pool.sessionOptions,
-                maxAgeSecs: sessionStorage.maxAgeSecs,
-                maxUsageCount: sessionStorage.maxUsageCount,
+                maxAgeSecs: sessionConfig.maxAgeSecs,
+                maxUsageCount: sessionConfig.maxUsageCount,
                 sessionPool: pool,
                 userData: {
                     headers: {
@@ -65,8 +65,8 @@ Apify.main(async () => {
 
             return session;
         },
-        maxPoolSize: sessionStorage.maxPoolSize,
-        persistStateKeyValueStoreId: sessionStorage.storageName
+        maxPoolSize: sessionConfig.maxPoolSize,
+        persistStateKeyValueStoreId: sessionConfig.storageName
     });
 
     let usedSession: undefined | Apify.Session;

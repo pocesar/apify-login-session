@@ -12,7 +12,7 @@ export interface Schema {
         url: string;
         method?: string;
     }>;
-    sessionStorage: {
+    sessionConfig: {
         storageName: string;
         maxAgeSecs: number;
         maxUsageCount: number;
