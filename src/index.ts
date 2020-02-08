@@ -119,6 +119,8 @@ Apify.main(async () => {
             let currentUrl: URL | null = null;
 
             for (const step of steps) {
+                request.noRetry = false; // reset retry
+
                 log.debug("Applying step", {
                     step,
                     request
@@ -169,7 +171,7 @@ Apify.main(async () => {
                         await isMissing(step.failed, "failed");
                     } catch (e) {
                         throw new Error(
-                            `Failed selector "${step.failed}" found on page`
+                            `Failed selector "${step.failed.selector}" found on page`
                         );
                     }
                 }
