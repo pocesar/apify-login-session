@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <form id="form">
+        <input type="text"
+               id="email" />
+        <input type="password"
+               id="password" />
+        <input class="btn-login submit"
+               type="submit" />
+    </form>
+
+    <pre>{{headers}}</pre>
+
+    <script>
+        (function () {
+            const form = document.getElementById('form');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                localStorage.setItem('submitted', 'true');
+
+                sessionStorage.setItem('session', JSON.stringify(await (await fetch(document.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById('email'),
+                        password: document.getElementById('password'),
+                    })
+                })).json()));
+
+                const div = document.createElement('div');
+                div.innerText = 'Logged in';
+                div.className = 'logged-in-menu';
+
+                form.parentNode.appendChild(div);
+            })
+        })()
+    </script>
+</body>
+
+</html>

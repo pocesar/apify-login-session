@@ -28,7 +28,7 @@ module.exports = {
     ],
     ignorePatterns: ["*.test.ts"],
     rules: {
-        "prettier/prettier": 2,
+        "prettier/prettier": 1,
         "quotes": 0,
         "import/extensions": 0,
         "@typescript-eslint/no-floating-promises": 2,

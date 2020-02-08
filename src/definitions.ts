@@ -1,3 +1,10 @@
+export interface StepItem {
+    /** The selector itself */
+    selector: string;
+    /** Timeout for this item */
+    timeout?: number;
+}
+
 export interface Schema {
     username: string;
     password: string;
@@ -14,15 +21,20 @@ export interface Schema {
     /** CSS selectors. Work with */
     steps: Array<{
         /** Selector for the username input */
-        username?: string;
+        username?: StepItem;
         /** Selector for the password input */
-        password?: string;
+        password?: StepItem;
         /** Selector for the submit button on the login form */
-        submit?: string;
+        submit?: StepItem;
         /** Element that should be on the page upon success */
-        success?: string;
+        success?: StepItem;
         /** Element that is usually on the page when it fails */
-        failed?: string;
+        failed?: StepItem;
+        /**
+         * How long to wait, in ms, until trying to get cookies,
+         * sessionStorage and localStorage items
+         */
+        waitFor?: number;
     }>;
     proxyConfiguration?: {
         proxyUrls?: string[];

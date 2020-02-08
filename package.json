@@ -6,6 +6,7 @@
     "scripts": {
         "compile": "tsc -p tsconfig.json",
         "start": "node lib/index.js",
+        "example": "ts-node example",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
@@ -15,6 +16,7 @@
     "keywords": [
         "apify",
         "session",
+        "login",
         "localstorage",
         "cookies",
         "user-agent",

@@ -114,6 +114,9 @@ Apify.main(async () => {
             usedSession!.setCookiesFromResponse(response);
 
             const isMissing = missingFromPage(page, request);
+            const typer = focusAndType(page);
+            const waitOn = waitForPageActivity(page);
+
             let currentUrl: URL | null = null;
 
             for (const step of steps) {
@@ -122,31 +125,32 @@ Apify.main(async () => {
                     request
                 });
 
-                if (
-                    step.username &&
-                    !(await isMissing(step.username, "username"))
-                ) {
-                    await focusAndType(page, username, step.username);
+                if (step.username) {
+                    await isMissing(step.username, "username");
+                    await typer(step.username, username);
                 }
 
-                if (
-                    step.password &&
-                    !(await isMissing(step.password, "password"))
-                ) {
-                    await focusAndType(page, password, step.password);
+                if (step.password) {
+                    await isMissing(step.password, "password");
+                    await typer(step.password, password);
                 }
 
+                // new URL throws on invalid URL, but it
+                // should never happen in the real world
                 currentUrl = new URL(page.url());
 
-                const race = waitForPageActivity(page, currentUrl);
+                const race = waitOn(currentUrl, step.waitFor);
 
-                if (step.submit && !(await isMissing(step.submit, "submit"))) {
+                if (step.submit) {
+                    await isMissing(step.submit, "submit");
+
                     log.debug("Tapping submit button", {
-                        selector: step.submit,
+                        step,
                         request
                     });
 
-                    await (await page.$(step.submit))!.tap(); // works for mobile and desktop versions
+                    // works for mobile and desktop versions
+                    await (await page.$(step.submit.selector))!.tap();
                 }
 
                 await race;
@@ -155,22 +159,36 @@ Apify.main(async () => {
                     // just making sure it's settled, give some time for the Javascript
                     // to put JWT tokens in storage or assign non-httpOnly cookies
                     await page.waitForNavigation({
-                        timeout: 5000,
+                        timeout: step.waitFor || 5000,
                         waitUntil: "networkidle2"
                     });
                 } catch (e) {}
 
-                if (step.failed && (await page.$(step.failed))) {
-                    throw new Error(
-                        `Failed selector "${step.failed}" found on page`
-                    );
+                if (step.failed) {
+                    try {
+                        // if it's present, it will throw
+                        await isMissing(step.failed, "failed");
+                    } catch (e) {
+                        throw new Error(
+                            `Failed selector "${step.failed}" found on page`
+                        );
+                    }
                 }
 
                 // check if something unique to logged-in users is present on the page
                 if (step.success) {
                     await isMissing(step.success, "success");
                 }
+
+                log.debug("Done with step", {
+                    step,
+                    request
+                });
             }
+
+            log.debug("Getting sessionStorage items", {
+                request
+            });
 
             // get any items that were added by Javascript to the session and local storages
             storage.session = fromEntries(
@@ -179,6 +197,10 @@ Apify.main(async () => {
                 })
             );
 
+            log.debug("Getting localStorage items", {
+                request
+            });
+
             storage.local = fromEntries(
                 await page.evaluate(async () => {
                     return Object.entries(window.localStorage);
@@ -186,6 +208,10 @@ Apify.main(async () => {
             );
 
             if (currentUrl) {
+                log.debug(`Getting cookies from ${currentUrl.origin}`, {
+                    request
+                });
+
                 try {
                     usedSession!.setPuppeteerCookies(
                         await page.cookies(),
@@ -193,7 +219,6 @@ Apify.main(async () => {
                     );
                 } catch (e) {
                     // sometimes fail with "Cookie has domain set to a public suffix"
-                    log.warning(e.message, { url: page.url() });
                 }
             }
         },

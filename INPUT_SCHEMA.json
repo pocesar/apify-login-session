@@ -48,10 +48,19 @@
             "description": "Each step that should be taken for the login to happen. For multi-stage logins (username then password), provide multiple steps",
             "type": "array",
             "prefill": [{
-                "username": "input#email",
-                "password": "input#pass",
-                "submit": "input[type=\"submit\"]",
-                "failed": "[role=\"alert\"]"
+                "username": {
+                    "selector": "input#email"
+                },
+                "password": {
+                    "selector": "input#pass"
+                },
+                "submit": {
+                    "selector": "input[type=\"submit\"]"
+                },
+                "failed": {
+                    "selector": "[role=\"alert\"]"
+                },
+                "waitFor": 5000
             }],
             "editor": "json"
         },
