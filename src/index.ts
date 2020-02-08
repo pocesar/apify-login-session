@@ -77,7 +77,6 @@ Apify.main(async () => {
 
             return Apify.launchPuppeteer({
                 proxyUrl: usedSession.userData.proxyUrl,
-                useApifyProxy: !!usedSession.userData.proxyUrl,
                 apifyProxySession: usedSession.id
             });
         },
