@@ -4,7 +4,9 @@ Grab a session for any website for usage on your own actor, and store them in yo
 
 ## Usage
 
-This actor can help you (re)use logged in sessions for your website, abstracting away the need for developing your own login mechanism. It uses a named storage, so you can request a new session and it will be readily available to all your other actors, as it's tailored to work seamlessly on Apify platform and other actors. It's more low-level than other actors, but it tries to cover the most common use cases like:
+This actor can help you (re)use logged in sessions for your website, abstracting away the need for developing your own login mechanism. It uses a named storage, so you can request a new session and it will be readily available to all your other actors, as it's tailored to work seamlessly on Apify platform and other actors.
+
+It's more low-level than other actors, but it tries to cover the most common use cases like:
 
 * Single Page Applications
 * Server Side Rendered websites
@@ -21,7 +23,7 @@ const { session, error } = await Apify.call('pocesar/login-session', {
     username: 'username',
     password: 'password',
     website: [{ url: 'http://example.com' }], // the RequestList format
-    sessionStorage: {
+    sessionConfig: {
         storageName
     },
     steps: [{
