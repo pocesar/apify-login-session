@@ -213,13 +213,27 @@ Apify.main(async () => {
                     request
                 });
 
-                try {
-                    usedSession!.setPuppeteerCookies(
-                        await page.cookies(),
-                        currentUrl.origin
-                    );
-                } catch (e) {
-                    // sometimes fail with "Cookie has domain set to a public suffix"
+                // we have to do a brute-force here, to be able to get subdomain
+                // cookies
+                const domainParts = currentUrl.hostname
+                    .split(".")
+                    .map((_, index, all) => {
+                        return all.slice(index);
+                    })
+                    .filter(s => s.length > 1) // filter at least, valid domains
+                    .map(s => s.join("."));
+
+                const cookies = await page.cookies();
+
+                for (const origin of domainParts) {
+                    try {
+                        usedSession!.setPuppeteerCookies(
+                            cookies,
+                            `${currentUrl.protocol}//${origin}`
+                        );
+                    } catch (e) {
+                        // sometimes fail with "Cookie has domain set to a public suffix"
+                    }
                 }
             }
         },
@@ -255,5 +269,7 @@ Apify.main(async () => {
         log.info(`Session "${usedSession.id}" created`);
     } else {
         log.info(`Nothing created`);
+
+        process.exit(1); // give an outside world hint that it failed
     }
 });

@@ -31,7 +31,7 @@ export const missingFromPage = (page: Page, request: Request) => async (
             });
         } catch (e) {
             throw new Error(
-                `Missing selector "${step.selector}" for "${label}"`
+                `Missing selector "${step.selector}" for "${label}" after ${step.timeout}ms timeout`
             );
         }
     }
