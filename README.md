@@ -24,7 +24,10 @@ const { session, error } = await Apify.call('pocesar/login-session', {
     password: 'password',
     website: [{ url: 'http://example.com' }], // the RequestList format
     sessionConfig: {
-        storageName
+        storageName,
+        maxAgeSecs: 3600,
+        maxUsageCount: 10,
+        maxPoolSize: 120
     },
     steps: [{
         username: {
