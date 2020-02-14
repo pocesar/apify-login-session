@@ -1,7 +1,7 @@
 import * as Apify from "apify";
-import { Schema } from "./definitions";
+import { Schema, SessionUserData } from "./definitions";
 import {
-    missingFromPage,
+    throwIfMissing,
     waitForPageActivity,
     fromEntries,
     focusAndType
@@ -14,12 +14,11 @@ const { log, puppeteer, getRandomUserAgent } = Apify.utils;
 Apify.main(async () => {
     const input: Schema = await Apify.getInput();
 
-    if (typeof input !== "object") {
+    if (!input || typeof input !== "object") {
         throw new Error("Missing input");
     }
 
     const {
-        steps,
         password,
         sessionConfig,
         username,
@@ -27,7 +26,7 @@ Apify.main(async () => {
         proxyConfiguration
     } = input;
 
-    if (!steps?.length) {
+    if (!input.steps?.length) {
         throw new Error("You must provide at least one step");
     }
 
@@ -38,9 +37,9 @@ Apify.main(async () => {
         session: {}
     };
 
-    const sessionPool = await Apify.openSessionPool({
+    const sessionPool = await Apify.openSessionPool<Partial<SessionUserData>>({
         createSessionFunction: pool => {
-            const session = new Apify.Session({
+            const session = new Apify.Session<Partial<SessionUserData>>({
                 ...pool.sessionOptions,
                 maxAgeSecs: sessionConfig.maxAgeSecs,
                 maxUsageCount: sessionConfig.maxUsageCount,
@@ -69,7 +68,7 @@ Apify.main(async () => {
         persistStateKeyValueStoreId: sessionConfig.storageName
     });
 
-    let usedSession: undefined | Apify.Session;
+    let usedSession: undefined | Apify.Session<Partial<SessionUserData>>;
 
     const crawler = new Apify.PuppeteerCrawler({
         launchPuppeteerFunction: async () => {
@@ -112,13 +111,9 @@ Apify.main(async () => {
         handlePageFunction: async ({ page, request, response }) => {
             usedSession!.setCookiesFromResponse(response);
 
-            const isMissing = missingFromPage(page, request);
-            const typer = focusAndType(page);
-            const waitOn = waitForPageActivity(page);
-
             let currentUrl: URL | null = null;
 
-            for (const step of steps) {
+            for (const step of input.steps) {
                 request.noRetry = false; // reset retry
 
                 log.debug("Applying step", {
@@ -127,31 +122,37 @@ Apify.main(async () => {
                 });
 
                 if (step.username) {
-                    await isMissing(step.username, "username");
-                    await typer(step.username, username);
+                    await throwIfMissing(page, step.username, "username");
+                    await focusAndType(page, step.username, username);
                 }
 
                 if (step.password) {
-                    await isMissing(step.password, "password");
-                    await typer(step.password, password);
+                    await throwIfMissing(page, step.password, "password");
+                    await focusAndType(page, step.password, password);
                 }
 
                 // new URL throws on invalid URL, but it
                 // should never happen in the real world
                 currentUrl = new URL(page.url());
 
-                const race = waitOn(currentUrl, step.waitFor);
+                const race = waitForPageActivity(
+                    page,
+                    currentUrl,
+                    step.waitForMillis
+                );
 
                 if (step.submit) {
-                    await isMissing(step.submit, "submit");
+                    await throwIfMissing(page, step.submit, "submit");
 
                     log.debug("Tapping submit button", {
                         step,
                         request
                     });
 
+                    const submitElement = (await page.$(step.submit.selector))!;
+
                     // works for mobile and desktop versions
-                    await (await page.$(step.submit.selector))!.tap();
+                    await submitElement.tap();
                 }
 
                 await race;
@@ -160,7 +161,7 @@ Apify.main(async () => {
                     // just making sure it's settled, give some time for the Javascript
                     // to put JWT tokens in storage or assign non-httpOnly cookies
                     await page.waitForNavigation({
-                        timeout: step.waitFor || 5000,
+                        timeout: step.waitForMillis || 5000,
                         waitUntil: "networkidle2"
                     });
                 } catch (e) {}
@@ -168,7 +169,7 @@ Apify.main(async () => {
                 if (step.failed) {
                     try {
                         // if it's present, it will throw
-                        await isMissing(step.failed, "failed");
+                        await throwIfMissing(page, step.failed, "failed");
                     } catch (e) {
                         throw new Error(
                             `Failed selector "${step.failed.selector}" found on page`
@@ -178,7 +179,7 @@ Apify.main(async () => {
 
                 // check if something unique to logged-in users is present on the page
                 if (step.success) {
-                    await isMissing(step.success, "success");
+                    await throwIfMissing(page, step.success, "success");
                 }
 
                 log.debug("Done with step", {
@@ -216,11 +217,18 @@ Apify.main(async () => {
                 // we have to do a brute-force here, to be able to get subdomain
                 // cookies
                 const domainParts = currentUrl.hostname
+                    // split the domain on dots
                     .split(".")
                     .map((_, index, all) => {
+                        // return chopped domain, like:
+                        // ['subdomain', 'something', 'com'], ['something', 'com'], ['com']
                         return all.slice(index);
                     })
-                    .filter(s => s.length > 1) // filter at least, valid domains
+                    // we need at least 2 parts for a valid domain
+                    // so ['subdomain', 'something', 'com']
+                    .filter(s => s.length > 1)
+                    // rebuild the domains
+                    // ['subdomain', 'something', 'com'] -> 'subdomain.something.com'
                     .map(s => s.join("."));
 
                 const cookies = await page.cookies();

@@ -1,24 +1,35 @@
 import { Page } from "puppeteer";
-import { Request } from "apify";
-import { StepItem } from './definitions';
+import { StepItem } from "./definitions";
 
 // TODO: Use Object.fromEntries when it's well supported
 /**
  * Transform entries (Array<[key, value]>) into an object.
  */
 export const fromEntries = (
-    entries: [string, string][]
-): { [index: string]: string } =>
-    entries.reduce((out, [key, value]) => ({ ...out, [key]: value }), {});
+    entries: Array<[string, string]>
+): { [index: string]: string } => {
+    return entries.reduce(
+        (out, [key, value]) => ({
+            ...out,
+            [key]: value
+        }),
+        {}
+    );
+};
 
-export const missingFromPage = (page: Page, request: Request) => async (
+/**
+ * Checks for the existence or waits for it to be available
+ * depending on user input for "timeout".
+ *
+ * Throws a descriptive error with the label if it's missing
+ */
+export const throwIfMissing = async (
+    page: Page,
     step: StepItem,
     label: string
 ) => {
-    if (!step.timeout) {
+    if (!step.timeoutMillis) {
         if (!(await page.$(step.selector))) {
-            request.noRetry = true;
-
             throw new Error(
                 `Missing selector "${step.selector}" for "${label}"`
             );
@@ -27,11 +38,11 @@ export const missingFromPage = (page: Page, request: Request) => async (
         // only wait if the selector isn't on page
         try {
             await page.waitForSelector(step.selector, {
-                timeout: step.timeout
+                timeout: step.timeoutMillis
             });
         } catch (e) {
             throw new Error(
-                `Missing selector "${step.selector}" for "${label}" after ${step.timeout}ms timeout`
+                `Missing selector "${step.selector}" for "${label}" after ${step.timeoutMillis}ms timeout`
             );
         }
     }
@@ -40,7 +51,8 @@ export const missingFromPage = (page: Page, request: Request) => async (
 /**
  * Find an input element on the page, focus then type on it
  */
-export const focusAndType = (page: Page) => async (
+export const focusAndType = async (
+    page: Page,
     step: StepItem,
     value?: string
 ) => {
@@ -48,9 +60,9 @@ export const focusAndType = (page: Page) => async (
         return;
     }
 
-    if (step.timeout && !(await page.$(step.selector))) {
+    if (step.timeoutMillis && !(await page.$(step.selector))) {
         await page.waitForSelector(step.selector, {
-            timeout: step.timeout
+            timeout: step.timeoutMillis
         });
     }
 
@@ -63,14 +75,15 @@ export const focusAndType = (page: Page) => async (
  * AJAX requests after submitting a form, history.push / hash
  * change
  */
-export const waitForPageActivity = (page: Page) => (
+export const waitForPageActivity = (
+    page: Page,
     parsedUrl: URL,
-    timeout = 15000
+    timeoutMillis = 15000
 ) =>
     Promise.race([
         // for regular form POSTs, check if there's a redirect
         page.waitForNavigation({
-            timeout,
+            timeout: timeoutMillis,
             waitUntil: "networkidle2"
         }),
         // for SPAs, check if the url is changing (hash part, etc)
@@ -78,7 +91,7 @@ export const waitForPageActivity = (page: Page) => (
             (cUrl: string) => {
                 return document.location.href !== cUrl;
             },
-            { timeout },
+            { timeout: timeoutMillis },
             parsedUrl.href
         ),
         // for AJAX in general, check for valid responses
@@ -88,11 +101,11 @@ export const waitForPageActivity = (page: Page) => (
                     response.status() < 400 &&
                     // same origin request, usually ajax
                     (response.url().includes(parsedUrl.hostname) ||
-                        !!(response.headers()?.["set-cookie"])) // cookie header presence
+                        !!response.headers()?.["set-cookie"]) // cookie header presence
                 );
             },
             {
-                timeout
+                timeout: timeoutMillis
             }
         )
     ]);

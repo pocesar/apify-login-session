@@ -2,7 +2,7 @@ export interface StepItem {
     /** The selector itself */
     selector: string;
     /** Timeout for this item */
-    timeout?: number;
+    timeoutMillis?: number;
 }
 
 export interface Schema {
@@ -34,7 +34,7 @@ export interface Schema {
          * How long to wait, in ms, until trying to get cookies,
          * sessionStorage and localStorage items
          */
-        waitFor?: number;
+        waitForMillis?: number;
     }>;
     proxyConfiguration?: {
         proxyUrls?: string[];
