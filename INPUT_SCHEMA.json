@@ -60,7 +60,7 @@
                 "failed": {
                     "selector": "[role=\"alert\"]"
                 },
-                "waitFor": 5000
+                "waitForMillis": 5000
             }],
             "editor": "json"
         },
