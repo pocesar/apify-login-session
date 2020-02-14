@@ -32,7 +32,7 @@ const { session, error } = await Apify.call('pocesar/login-session', {
     steps: [{
         username: {
             selector: "input#email", // the input that receives the username
-            timeout: 10000 // optional timeout in ms
+            timeoutMillis: 10000 // optional timeout in ms
         },
         password: {
             selector: "input#pass" // the input that receives the password
@@ -42,9 +42,9 @@ const { session, error } = await Apify.call('pocesar/login-session', {
         },
         failed: {
             selector: "[role=\"alert\"],#captcha", // usually an error that tells the login failed
-            timeout: 10000 // optional timeout in ms
+            timeoutMillis: 10000 // optional timeout in ms
         },
-        waitFor: 15000 // optional "sleep" in ms to consider the page as "settled"
+        waitForMillis: 15000 // optional "sleep" in ms to consider the page as "settled"
     }]
 });
 
