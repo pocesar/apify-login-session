@@ -16,6 +16,12 @@
             "type": "string",
             "editor": "textfield"
         },
+        "userAgent": {
+            "title": "Browser User Agent",
+            "description": "Choose an user-agent string instead of using a random one",
+            "type": "string",
+            "editor": "textfield"
+        },
         "website": {
             "title": "Website to grab a session from",
             "description": "The website to get the session from. The login form should be available on the provided url",

@@ -8,6 +8,7 @@ export interface StepItem {
 export interface Schema {
     username: string;
     password: string;
+    userAgent: string;
     website: Array<{
         url: string;
         method?: string;

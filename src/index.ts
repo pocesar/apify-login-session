@@ -12,7 +12,7 @@ import sample = require("lodash.sample");
 const { log, puppeteer, getRandomUserAgent } = Apify.utils;
 
 Apify.main(async () => {
-    const input: Schema = await Apify.getInput();
+    const input = await Apify.getInput<Schema>();
 
     if (!input || typeof input !== "object") {
         throw new Error("Missing input");
@@ -22,6 +22,7 @@ Apify.main(async () => {
         password,
         sessionConfig,
         username,
+        userAgent,
         website,
         proxyConfiguration
     } = input;
@@ -46,7 +47,7 @@ Apify.main(async () => {
                 sessionPool: pool,
                 userData: {
                     headers: {
-                        "User-Agent": getRandomUserAgent()
+                        "User-Agent": userAgent || getRandomUserAgent()
                     }
                 }
             });
@@ -164,7 +165,16 @@ Apify.main(async () => {
                         timeout: step.waitForMillis || 5000,
                         waitUntil: "networkidle2"
                     });
-                } catch (e) {}
+                } catch (e) {
+                    log.info(
+                        `Considering page settled after ${step.waitForMillis ||
+                            5000}ms`,
+                        {
+                            step,
+                            request
+                        }
+                    );
+                }
 
                 if (step.failed) {
                     try {
