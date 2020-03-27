@@ -1,5 +1,6 @@
 import { Page } from "puppeteer";
 import { StepItem } from "./definitions";
+import { utils } from 'apify';
 
 // TODO: Use Object.fromEntries when it's well supported
 /**
@@ -11,7 +12,7 @@ export const fromEntries = (
     return entries.reduce(
         (out, [key, value]) => ({
             ...out,
-            [key]: value
+            [key]: value,
         }),
         {}
     );
@@ -28,6 +29,10 @@ export const throwIfMissing = async (
     step: StepItem,
     label: string
 ) => {
+    if (!step.selector) {
+        throw new Error(`Missing "selector" parameter for ${label}`);
+    }
+
     if (!step.timeoutMillis) {
         if (!(await page.$(step.selector))) {
             throw new Error(
@@ -38,7 +43,7 @@ export const throwIfMissing = async (
         // only wait if the selector isn't on page
         try {
             await page.waitForSelector(step.selector, {
-                timeout: step.timeoutMillis
+                timeout: step.timeoutMillis,
             });
         } catch (e) {
             throw new Error(
@@ -62,12 +67,13 @@ export const focusAndType = async (
 
     if (step.timeoutMillis && !(await page.$(step.selector))) {
         await page.waitForSelector(step.selector, {
-            timeout: step.timeoutMillis
+            timeout: step.timeoutMillis,
         });
     }
 
     await page.focus(step.selector);
-    await page.type(step.selector, value, { delay: 30 });
+    await utils.sleep(1000);
+    await page.type(step.selector, value);
 };
 
 /**
@@ -84,7 +90,7 @@ export const waitForPageActivity = (
         // for regular form POSTs, check if there's a redirect
         page.waitForNavigation({
             timeout: timeoutMillis,
-            waitUntil: "networkidle2"
+            waitUntil: "networkidle2",
         }),
         // for SPAs, check if the url is changing (hash part, etc)
         page.waitForFunction(
@@ -96,7 +102,7 @@ export const waitForPageActivity = (
         ),
         // for AJAX in general, check for valid responses
         page.waitForResponse(
-            response => {
+            (response) => {
                 return (
                     response.status() < 400 &&
                     // same origin request, usually ajax
@@ -105,7 +111,7 @@ export const waitForPageActivity = (
                 );
             },
             {
-                timeout: timeoutMillis
+                timeout: timeoutMillis,
             }
-        )
+        ),
     ]);

@@ -8,17 +8,22 @@
             "title": "Your username",
             "description": "The username/email that will be passed to the form",
             "type": "string",
+            "example": "username@example.com",
             "editor": "textfield"
         },
         "password": {
             "title": "Your password",
             "description": "The password that will be passed to the form",
+            "example": "secretpassword",
             "type": "string",
             "editor": "textfield"
         },
         "userAgent": {
             "title": "Browser User Agent",
-            "description": "Choose an user-agent string instead of using a random one",
+            "description": "Choose an user-agent string",
+            "default": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0) Gecko/20100101 Firefox/68.0",
+            "prefill": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0) Gecko/20100101 Firefox/68.0",
+            "example": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0) Gecko/20100101 Firefox/68.0",
             "type": "string",
             "editor": "textfield"
         },
@@ -70,6 +75,15 @@
             }],
             "editor": "json"
         },
+        "cookieDomains": {
+            "title": "Cookie domains",
+            "description": "Specify the domains that should get cookies from",
+            "example": ["domain.com", "subdomain.domain.com"],
+            "default": [],
+            "prefill": [],
+            "type": "array",
+            "editor": "stringList"
+        },
         "proxyConfiguration": {
             "title": "Proxy configuration",
             "type": "object",
@@ -85,6 +99,7 @@
         "password",
         "website",
         "sessionConfig",
-        "steps"
+        "steps",
+        "cookieDomains"
     ]
 }

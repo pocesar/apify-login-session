@@ -13,6 +13,7 @@ export interface Schema {
         url: string;
         method?: string;
     }>;
+    cookieDomains: string[];
     sessionConfig: {
         storageName: string;
         maxAgeSecs: number;

@@ -4,7 +4,7 @@ import {
     throwIfMissing,
     waitForPageActivity,
     fromEntries,
-    focusAndType
+    focusAndType,
 } from "./functions";
 
 import sample = require("lodash.sample");
@@ -12,7 +12,7 @@ import sample = require("lodash.sample");
 const { log, puppeteer, getRandomUserAgent } = Apify.utils;
 
 Apify.main(async () => {
-    const input = await Apify.getInput<Schema>();
+    const input: Schema | null = await Apify.getInput();
 
     if (!input || typeof input !== "object") {
         throw new Error("Missing input");
@@ -20,70 +20,85 @@ Apify.main(async () => {
 
     const {
         password,
-        sessionConfig,
+        sessionConfig = {
+            storageName: "login-sessions",
+            maxAgeSecs: 3600,
+            maxUsageCount: 100,
+            maxPoolSize: 100,
+        },
         username,
-        userAgent,
+        userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0) Gecko/20100101 Firefox/68.0",
         website,
-        proxyConfiguration
+        proxyConfiguration,
+        cookieDomains = [],
     } = input;
 
     if (!input.steps?.length) {
-        throw new Error("You must provide at least one step");
+        throw new Error(
+            'You must provide at least one step in "steps" parameter'
+        );
+    }
+
+    if (!cookieDomains?.length) {
+        throw new Error('You must provide "cookieDomains" parameter');
     }
 
     const requestList = await Apify.openRequestList(null, website);
 
     const storage = {
         local: {},
-        session: {}
+        session: {},
     };
 
-    const sessionPool = await Apify.openSessionPool<Partial<SessionUserData>>({
-        createSessionFunction: pool => {
-            const session = new Apify.Session<Partial<SessionUserData>>({
+    const sessionPool = await Apify.openSessionPool({
+        createSessionFunction: (pool) => {
+            const session = new Apify.Session({
                 ...pool.sessionOptions,
                 maxAgeSecs: sessionConfig.maxAgeSecs,
                 maxUsageCount: sessionConfig.maxUsageCount,
                 sessionPool: pool,
-                userData: {
-                    headers: {
-                        "User-Agent": userAgent || getRandomUserAgent()
-                    }
-                }
             });
 
             const proxyUrls = proxyConfiguration?.useApifyProxy
                 ? [
                       Apify.getApifyProxyUrl({
                           groups: proxyConfiguration?.apifyProxyGroups,
-                          session: session.id
-                      })
+                          session: session.id,
+                      }),
                   ]
                 : proxyConfiguration?.proxyUrls || [];
 
-            session.userData.proxyUrl = sample(proxyUrls);
+            session.userData.proxyUrl = sample(proxyUrls) || "";
 
             return session;
         },
         maxPoolSize: sessionConfig.maxPoolSize,
-        persistStateKeyValueStoreId: sessionConfig.storageName
+        persistStateKeyValueStoreId: sessionConfig.storageName,
     });
 
-    let usedSession: undefined | Apify.Session<Partial<SessionUserData>>;
+    let usedSession: undefined | Apify.Session;
 
     const crawler = new Apify.PuppeteerCrawler({
-        launchPuppeteerFunction: async () => {
+        launchPuppeteerFunction: async (options) => {
             usedSession = await sessionPool.getSession();
 
             return Apify.launchPuppeteer({
+                ...options,
                 proxyUrl: usedSession.userData.proxyUrl,
-                apifyProxySession: usedSession.id
+                apifyProxySession: usedSession.id,
+                stealth: true,
+                useChrome: Apify.isAtHome(),
+                userAgent,
             });
         },
         // logins shouldn't take more than 1 request actually
         // redirects are dealt in one pass
         maxRequestsPerCrawl: 3,
+        maxRequestRetries: 0,
         requestList,
+        autoscaledPoolOptions: {
+            maxConcurrency: 1,
+        },
         gotoFunction: async ({ page, request }) => {
             await puppeteer.blockRequests(page, {
                 extraUrlPatterns: [
@@ -96,21 +111,31 @@ Apify.main(async () => {
                     "facebook.net",
                     "staticxx.facebook.com",
                     "www.googleadservices.com",
-                    "js.intercomcdn.com"
-                ]
+                    "js.intercomcdn.com",
+                ],
             });
 
-            await page.setExtraHTTPHeaders({
-                ...usedSession!.userData.headers
+            await page.emulate({
+                viewport: {
+                    height: 1080,
+                    width: 1920,
+                },
+                userAgent,
             });
 
             return page.goto(request.url, {
                 waitUntil: "networkidle2",
-                timeout: 30000
+                timeout: 30000,
             });
         },
+        handlePageTimeoutSecs: 300,
+        persistCookiesPerSession: false,
         handlePageFunction: async ({ page, request, response }) => {
-            usedSession!.setCookiesFromResponse(response);
+            try {
+                usedSession!.setCookiesFromResponse(response);
+            } catch (e) {
+                log.debug(e.message);
+            }
 
             let currentUrl: URL | null = null;
 
@@ -119,7 +144,7 @@ Apify.main(async () => {
 
                 log.debug("Applying step", {
                     step,
-                    request
+                    request,
                 });
 
                 if (step.username) {
@@ -147,7 +172,7 @@ Apify.main(async () => {
 
                     log.debug("Tapping submit button", {
                         step,
-                        request
+                        request,
                     });
 
                     const submitElement = (await page.$(step.submit.selector))!;
@@ -163,27 +188,36 @@ Apify.main(async () => {
                     // to put JWT tokens in storage or assign non-httpOnly cookies
                     await page.waitForNavigation({
                         timeout: step.waitForMillis || 5000,
-                        waitUntil: "networkidle2"
+                        waitUntil: "networkidle2",
                     });
                 } catch (e) {
                     log.info(
-                        `Considering page settled after ${step.waitForMillis ||
-                            5000}ms`,
+                        `Considering page settled after ${
+                            step.waitForMillis || 5000
+                        }ms`,
                         {
                             step,
-                            request
+                            request,
                         }
                     );
                 }
 
                 if (step.failed) {
                     try {
-                        // if it's present, it will throw
+                        // if it's missing, it will throw, and we expect it
                         await throwIfMissing(page, step.failed, "failed");
-                    } catch (e) {
+
                         throw new Error(
                             `Failed selector "${step.failed.selector}" found on page`
                         );
+                    } catch (e) {
+                        if (e.message.includes("Missing")) {
+                            log.info(
+                                `Failed selector "${step.failed.selector}" not found on page, all good`
+                            );
+                        } else {
+                            throw e;
+                        }
                     }
                 }
 
@@ -194,86 +228,78 @@ Apify.main(async () => {
 
                 log.debug("Done with step", {
                     step,
-                    request
+                    request,
                 });
             }
 
+            log.info("All steps done, getting info from domains");
+
             log.debug("Getting sessionStorage items", {
-                request
+                request,
             });
 
             // get any items that were added by Javascript to the session and local storages
-            storage.session = fromEntries(
-                await page.evaluate(async () => {
-                    return Object.entries(window.sessionStorage);
-                })
-            );
+            storage.session = {
+                ...storage.session,
+                ...fromEntries(
+                    await page.evaluate(async () => {
+                        return Object.entries(window.sessionStorage);
+                    })
+                ),
+            };
 
             log.debug("Getting localStorage items", {
-                request
+                request,
             });
 
-            storage.local = fromEntries(
-                await page.evaluate(async () => {
-                    return Object.entries(window.localStorage);
-                })
-            );
+            storage.local = {
+                ...storage.local,
+                ...fromEntries(
+                    await page.evaluate(async () => {
+                        return Object.entries(window.localStorage);
+                    })
+                ),
+            };
 
-            if (currentUrl) {
-                log.debug(`Getting cookies from ${currentUrl.origin}`, {
-                    request
+            const cookies = await page.cookies();
+
+            for (const origin of cookieDomains.sort(
+                (a, b) => a.length - b.length
+            )) {
+                log.debug(`Getting cookies from ${origin}`, {
+                    request,
                 });
 
-                // we have to do a brute-force here, to be able to get subdomain
-                // cookies
-                const domainParts = currentUrl.hostname
-                    // split the domain on dots
-                    .split(".")
-                    .map((_, index, all) => {
-                        // return chopped domain, like:
-                        // ['subdomain', 'something', 'com'], ['something', 'com'], ['com']
-                        return all.slice(index);
-                    })
-                    // we need at least 2 parts for a valid domain
-                    // so ['subdomain', 'something', 'com']
-                    .filter(s => s.length > 1)
-                    // rebuild the domains
-                    // ['subdomain', 'something', 'com'] -> 'subdomain.something.com'
-                    .map(s => s.join("."));
-
-                const cookies = await page.cookies();
-
-                for (const origin of domainParts) {
-                    try {
-                        usedSession!.setPuppeteerCookies(
-                            cookies,
-                            `${currentUrl.protocol}//${origin}`
-                        );
-                    } catch (e) {
-                        // sometimes fail with "Cookie has domain set to a public suffix"
-                    }
+                try {
+                    await usedSession!.setPuppeteerCookies(
+                        cookies,
+                        `${origin}`
+                    );
+                } catch (e) {
+                    // sometimes fail with "Cookie has domain set to a public suffix"
                 }
             }
         },
         handleFailedRequestFunction: async ({ error }) => {
-            log.exception(error);
+            log.exception(error, "All retries failed");
 
             usedSession = undefined;
 
             await Apify.setValue("OUTPUT", {
                 session: null,
-                error: error.message
+                error: error.message,
             });
-        }
+        },
     });
 
     await crawler.run();
 
     if (usedSession?.isUsable()) {
         usedSession.userData = {
+            userAgent,
             ...usedSession.userData,
             sessionStorage: storage.session,
-            localStorage: storage.local
+            localStorage: storage.local,
         };
         usedSession.usageCount = 0; // make it brand new
 
@@ -281,7 +307,7 @@ Apify.main(async () => {
 
         await Apify.setValue("OUTPUT", {
             session: usedSession.getState(),
-            error: null
+            error: null,
         });
 
         log.info(`Session "${usedSession.id}" created`);
