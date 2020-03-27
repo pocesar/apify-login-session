@@ -1,4 +1,4 @@
-# apify-login-session
+# Login Session
 
 Get localStorage, sessionStorage and cookies from logins for usage in other actors.
 
@@ -221,6 +221,10 @@ Here are some real-life examples of INPUT.json that you may use:
 
 * Apify proxy sessions can last at most 24h, so never set your `maxAgeSecs` greater than this number
 * If the proxy fails, the login fails. If the proxy is banned, the login fails.
+
+## Example
+
+Example form is in [https://now-h3p8398gc.now.sh](https://now-h3p8398gc.now.sh)
 
 ## License
 
