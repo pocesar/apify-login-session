@@ -38,7 +38,7 @@ const { session, error } = await Apify.call('pocesar/login-session', {
             timeoutMillis: 10000 // optional timeout in ms
         },
         password: {
-            selector: "input#pass" // the input that receives the password
+            selector: "input#password" // the input that receives the password
         },
         submit: {
             selector: "input[type=\"submit\"]", // the button that executes the login
