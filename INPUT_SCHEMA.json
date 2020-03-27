@@ -1,6 +1,6 @@
 {
     "title": "login-session",
-    "description": "Grab a session for any website for usage on your own actor",
+    "description": "Get localStorage, sessionStorage and cookies from logins for usage in other actors",
     "type": "object",
     "schemaVersion": 1,
     "properties": {
