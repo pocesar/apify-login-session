@@ -101,7 +101,15 @@ Apify.main(async () => {
         },
         gotoFunction: async ({ page, request }) => {
             await puppeteer.blockRequests(page, {
-                extraUrlPatterns: [
+                urlPatterns: [
+                    ".woff",
+                    ".woff2",
+                    ".ttf",
+                    ".gif",
+                    ".png",
+                    ".svg",
+                    ".jpg",
+                    ".jpeg",
                     "fonts.googleapis.com",
                     "hotjar.com",
                     "doubleclick.net",

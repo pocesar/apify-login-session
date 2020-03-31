@@ -211,6 +211,41 @@ Here are some real-life examples of INPUT.json that you may use:
 }
 ```
 
+### Instagram
+
+```json
+{
+    "username": "username",
+    "password": "password",
+    "website": [{ "url": "https://instagram.com" }],
+    "cookieDomains": [
+        "https://www.instagram.com"
+    ],
+    "steps": [{
+        "username": {
+            "selector": "input[name=\"username\"]",
+            "timeoutMillis": 10000
+        },
+        "password": {
+            "selector": "input[name=\"password\"]",
+            "timeoutMillis": 10000
+        },
+        "submit": {
+            "selector": "button[type=\"submit\"]"
+        },
+        "success": {
+            "selector": "img[alt=\"Instagram\"]",
+            "timeoutMillis": 10000
+        },
+        "failed": {
+            "selector": "#slfErrorAlert",
+            "timeoutMillis": 5000
+        },
+        "waitForMillis": 30000
+    }]
+}
+```
+
 ## Related Content
 
 * [Log in to website by transferring cookies from web browser (legacy)](https://help.apify.com/en/articles/1444249-log-in-to-website-by-transferring-cookies-from-web-browser-legacy)
