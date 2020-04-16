@@ -27,7 +27,7 @@ Apify.main(async () => {
             maxPoolSize: 100,
         },
         username,
-        userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0) Gecko/20100101 Firefox/68.0",
+        userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36",
         website,
         proxyConfiguration,
         cookieDomains = [],
