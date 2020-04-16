@@ -1,5 +1,5 @@
 import * as Apify from "apify";
-import { Schema, SessionUserData } from "./definitions";
+import { Schema } from "./definitions";
 import {
     throwIfMissing,
     waitForPageActivity,
@@ -9,7 +9,7 @@ import {
 
 import sample = require("lodash.sample");
 
-const { log, puppeteer, getRandomUserAgent } = Apify.utils;
+const { log, puppeteer } = Apify.utils;
 
 Apify.main(async () => {
     const input: Schema | null = await Apify.getInput();
@@ -54,8 +54,9 @@ Apify.main(async () => {
         createSessionFunction: (pool) => {
             const session = new Apify.Session({
                 ...pool.sessionOptions,
-                maxAgeSecs: sessionConfig.maxAgeSecs,
-                maxUsageCount: sessionConfig.maxUsageCount,
+                id: sessionConfig.id || undefined,
+                maxAgeSecs: sessionConfig.maxAgeSecs || 3600,
+                maxUsageCount: sessionConfig.maxUsageCount || 100,
                 sessionPool: pool,
             });
 
@@ -72,8 +73,8 @@ Apify.main(async () => {
 
             return session;
         },
-        maxPoolSize: sessionConfig.maxPoolSize,
-        persistStateKeyValueStoreId: sessionConfig.storageName,
+        maxPoolSize: sessionConfig.maxPoolSize || 100,
+        persistStateKeyValueStoreId: sessionConfig.storageName || undefined,
     });
 
     let usedSession: undefined | Apify.Session;

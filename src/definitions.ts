@@ -15,6 +15,7 @@ export interface Schema {
     }>;
     cookieDomains: string[];
     sessionConfig: {
+        id?: string;
         storageName: string;
         maxAgeSecs: number;
         maxUsageCount: number;
