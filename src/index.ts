@@ -31,6 +31,8 @@ Apify.main(async () => {
         website,
         proxyConfiguration,
         cookieDomains = [],
+        maxRequestRetries = 1,
+        extraUrlPatterns = []
     } = input;
 
     if (!input.steps?.length) {
@@ -94,34 +96,16 @@ Apify.main(async () => {
         },
         // logins shouldn't take more than 1 request actually
         // redirects are dealt in one pass
-        maxRequestsPerCrawl: 3,
-        maxRequestRetries: 0,
+        maxRequestsPerCrawl: (+maxRequestRetries) + input.steps.length + 3,
+        maxRequestRetries,
         requestList,
         autoscaledPoolOptions: {
             maxConcurrency: 1,
         },
-        gotoFunction: async ({ page, request }) => {
+        gotoFunction: async ({ page, request, puppeteerPool }) => {
             await puppeteer.blockRequests(page, {
-                urlPatterns: [
-                    ".woff",
-                    ".woff2",
-                    ".ttf",
-                    ".gif",
-                    ".png",
-                    ".svg",
-                    ".jpg",
-                    ".jpeg",
-                    "fonts.googleapis.com",
-                    "hotjar.com",
-                    "doubleclick.net",
-                    "getblue.io",
-                    "googletagmanager.com",
-                    "google-analytics.com",
-                    "facebook.net",
-                    "staticxx.facebook.com",
-                    "www.googleadservices.com",
-                    "js.intercomcdn.com",
-                ],
+                urlPatterns: [],
+                extraUrlPatterns
             });
 
             await page.emulate({
@@ -132,10 +116,15 @@ Apify.main(async () => {
                 userAgent,
             });
 
-            return page.goto(request.url, {
-                waitUntil: "networkidle2",
-                timeout: 30000,
-            });
+            try {
+                return page.goto(request.url, {
+                    waitUntil: "networkidle0",
+                    timeout: 30000,
+                });
+            } catch (e) {
+                await puppeteerPool.retire(page.browser());
+                throw new Error('Goto function failed');
+            }
         },
         handlePageTimeoutSecs: 300,
         persistCookiesPerSession: false,
@@ -206,7 +195,7 @@ Apify.main(async () => {
                         }ms`,
                         {
                             step,
-                            request,
+                            url: request.url,
                         }
                     );
                 }

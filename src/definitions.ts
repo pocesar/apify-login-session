@@ -21,6 +21,8 @@ export interface Schema {
         maxUsageCount: number;
         maxPoolSize: number;
     };
+    extraUrlPatterns?: string[];
+    maxRequestRetries?: number;
     /** CSS selectors. Work with */
     steps: Array<{
         /** Selector for the username input */

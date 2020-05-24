@@ -246,6 +246,43 @@ Here are some real-life examples of INPUT.json that you may use:
 }
 ```
 
+### LinkedIn
+
+```json
+{
+    "username": "username",
+    "password": "password",
+    "website": [
+        {
+            "url": "https://www.linkedin.com/login?fromSignIn=true&trk=guest_homepage-basic_nav-header-signin"
+        }
+    ],
+    "steps": [
+        {
+            "username": {
+                "selector": "#username"
+            },
+            "password": {
+                "selector": "#password"
+            },
+            "submit": {
+                "selector": ".login__form_action_container button"
+            },
+            "success": {
+                "selector": ".authentication-outlet,.launchpad-cp-enabled",
+                "timeoutMillis": 15000
+            },
+            "failed": {
+                "selector": ".form__input--error,.login__form,.pin-verification-form",
+                "timeoutMillis": 15000
+            },
+            "waitForMillis": 30000
+        }
+    ],
+    "cookieDomains": ["https://www.linkedin.com"]
+}
+```
+
 ## Related Content
 
 * [Log in to website by transferring cookies from web browser (legacy)](https://help.apify.com/en/articles/1444249-log-in-to-website-by-transferring-cookies-from-web-browser-legacy)

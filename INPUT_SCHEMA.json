@@ -27,6 +27,15 @@
             "type": "string",
             "editor": "textfield"
         },
+        "maxRequestRetries": {
+            "title": "Max request retries",
+            "description": "How many retries before considering the request as failed",
+            "default": 0,
+            "prefill": 0,
+            "example": 1,
+            "type": "integer",
+            "editor": "number"
+        },
         "website": {
             "title": "Website to grab a session from",
             "description": "The website to get the session from. The login form should be available on the provided url",
@@ -92,6 +101,15 @@
                 "useApifyProxy": true
             },
             "editor": "proxy"
+        },
+        "extraUrlPatterns": {
+            "title": "Extra url blocking patterns",
+            "description": "Passes this blocking pattern to puppeteer.blockRequests, so you can selectively block some requests on the page",
+            "default": [],
+            "prefill": [],
+            "example": [".png", ".svg"],
+            "type": "array",
+            "editor": "stringList"
         }
     },
     "required": [
