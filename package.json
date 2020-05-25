@@ -1,6 +1,6 @@
 {
     "name": "apify-login-session",
-    "version": "0.3.0",
+    "version": "1.0.0",
     "description": "Get localStorage, sessionStorage and cookies from logins for usage in other actors",
     "main": "lib/index.js",
     "scripts": {
