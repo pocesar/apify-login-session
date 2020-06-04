@@ -32,7 +32,7 @@ Apify.main(async () => {
         proxyConfiguration,
         cookieDomains = [],
         maxRequestRetries = 1,
-        extraUrlPatterns = []
+        extraUrlPatterns = [],
     } = input;
 
     if (!input.steps?.length) {
@@ -109,7 +109,7 @@ Apify.main(async () => {
         },
         // logins shouldn't take more than 1 request actually
         // redirects are dealt in one pass
-        maxRequestsPerCrawl: (+maxRequestRetries) + input.steps.length + 3,
+        maxRequestsPerCrawl: +maxRequestRetries + input.steps.length + 3,
         maxRequestRetries,
         requestList,
         autoscaledPoolOptions: {
@@ -118,7 +118,7 @@ Apify.main(async () => {
         gotoFunction: async ({ page, request, puppeteerPool }) => {
             await puppeteer.blockRequests(page, {
                 urlPatterns: [],
-                extraUrlPatterns
+                extraUrlPatterns,
             });
 
             await page.emulate({
@@ -131,12 +131,12 @@ Apify.main(async () => {
 
             try {
                 return page.goto(request.url, {
-                    waitUntil: "networkidle0",
+                    waitUntil: "networkidle2",
                     timeout: 30000,
                 });
             } catch (e) {
                 await puppeteerPool.retire(page.browser());
-                throw new Error('Goto function failed');
+                throw new Error("Goto function failed");
             }
         },
         handlePageTimeoutSecs: 300,
