@@ -132,7 +132,7 @@ Apify.main(async () => {
             try {
                 return page.goto(request.url, {
                     waitUntil: "networkidle2",
-                    timeout: 30000,
+                    timeout: 120000,
                 });
             } catch (e) {
                 await puppeteerPool.retire(page.browser());
