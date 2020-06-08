@@ -93,6 +93,15 @@
             "type": "array",
             "editor": "stringList"
         },
+        "gotoTimeout": {
+            "title": "Visit page timeout",
+            "description": "How many seconds until page.goto should wait",
+            "default": 30,
+            "prefill": 30,
+            "example": 30,
+            "type": "integer",
+            "editor": "number"
+        },
         "proxyConfiguration": {
             "title": "Proxy configuration",
             "type": "object",

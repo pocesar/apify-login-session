@@ -23,6 +23,7 @@ export interface Schema {
     };
     extraUrlPatterns?: string[];
     maxRequestRetries?: number;
+    gotoTimeout?: number;
     /** CSS selectors. Work with */
     steps: Array<{
         /** Selector for the username input */

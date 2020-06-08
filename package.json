@@ -1,6 +1,6 @@
 {
     "name": "apify-login-session",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Get localStorage, sessionStorage and cookies from logins for usage in other actors",
     "main": "src/index.ts",
     "scripts": {
@@ -33,19 +33,19 @@
     "homepage": "https://github.com/pocesar/apify-login-session#readme",
     "dependencies": {
         "apify": "^0.20.4",
-        "puppeteer": "^3.1.0",
+        "puppeteer": "^3.3.0",
         "lodash.sample": "^4.2.1",
-        "ts-node": "^8.10.1",
-        "typescript": "^3.9.3"
+        "ts-node": "^8.10.2",
+        "typescript": "^3.9.5"
     },
     "devDependencies": {
         "@apify/eslint-config": "0.0.3",
         "@types/lodash.sample": "^4.2.6",
         "@types/node": "^12",
         "@types/puppeteer": "^3.0.0",
-        "@typescript-eslint/eslint-plugin": "^3.0.0",
-        "@typescript-eslint/parser": "^3.0.0",
-        "eslint": "^7.1.0",
+        "@typescript-eslint/eslint-plugin": "^3.1.0",
+        "@typescript-eslint/parser": "^3.1.0",
+        "eslint": "^7.2.0",
         "eslint-config-prettier": "^6.11.0",
         "eslint-plugin-import": "^2.20.2",
         "eslint-plugin-prettier": "^3.1.3",

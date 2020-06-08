@@ -33,6 +33,7 @@ Apify.main(async () => {
         cookieDomains = [],
         maxRequestRetries = 1,
         extraUrlPatterns = [],
+        gotoTimeout = 30,
     } = input;
 
     if (!input.steps?.length) {
@@ -103,6 +104,11 @@ Apify.main(async () => {
                 },
                 apifyProxySession: usedSession.id,
                 stealth: true,
+                args: [
+                    "--disable-dev-shm-usage",
+                    "--disable-setuid-sandbox",
+                    "--disable-notifications",
+                ],
                 useChrome: Apify.isAtHome(),
                 userAgent,
             });
@@ -132,7 +138,7 @@ Apify.main(async () => {
             try {
                 return page.goto(request.url, {
                     waitUntil: "networkidle2",
-                    timeout: 120000,
+                    timeout: gotoTimeout * 1000,
                 });
             } catch (e) {
                 await puppeteerPool.retire(page.browser());
