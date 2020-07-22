@@ -1,4 +1,5 @@
 import * as Apify from "apify";
+import { ENV_VARS } from "apify-shared/consts";
 import { Schema } from "./definitions";
 import {
     throwIfMissing,
@@ -6,8 +7,6 @@ import {
     fromEntries,
     focusAndType,
 } from "./functions";
-
-import sample = require("lodash.sample");
 
 const { log, puppeteer } = Apify.utils;
 
@@ -26,8 +25,9 @@ Apify.main(async () => {
             maxUsageCount: 100,
             maxPoolSize: 100,
         },
+        forceCloud = true,
         username,
-        userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36",
+        userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36",
         website,
         proxyConfiguration,
         cookieDomains = [],
@@ -46,12 +46,26 @@ Apify.main(async () => {
         throw new Error('You must provide "cookieDomains" parameter');
     }
 
+    if (forceCloud === true) {
+        if (sessionConfig.storageName) {
+            delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
+            process.env[ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID] =
+                sessionConfig.storageName;
+        } else {
+            log.warning("To use forceCloud, you need to provide a storageName");
+        }
+    }
+
     const requestList = await Apify.openRequestList(null, website);
 
     const storage = {
         local: {},
         session: {},
     };
+
+    const proxyConfig = await Apify.createProxyConfiguration({
+        ...proxyConfiguration,
+    });
 
     const sessionPool = await Apify.openSessionPool({
         createSessionFunction: (pool) => {
@@ -63,16 +77,7 @@ Apify.main(async () => {
                 sessionPool: pool,
             });
 
-            const proxyUrls = proxyConfiguration?.useApifyProxy
-                ? [
-                      Apify.getApifyProxyUrl({
-                          groups: proxyConfiguration?.apifyProxyGroups,
-                          session: session.id,
-                      }),
-                  ]
-                : proxyConfiguration?.proxyUrls || [];
-
-            session.userData.proxyUrl = sample(proxyUrls) || "";
+            session.userData.proxyUrl = proxyConfig?.newUrl(session.id);
 
             return session;
         },

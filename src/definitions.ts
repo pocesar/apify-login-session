@@ -13,6 +13,7 @@ export interface Schema {
         url: string;
         method?: string;
     }>;
+    forceCloud?: boolean;
     cookieDomains: string[];
     sessionConfig: {
         id?: string;

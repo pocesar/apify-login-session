@@ -119,6 +119,12 @@
             "example": [".png", ".svg"],
             "type": "array",
             "editor": "stringList"
+        },
+        "forceCloud": {
+            "title": "Force cloud",
+            "description": "Use this when you execute the actor locally in your machine, but fills the session storage on the Apify platform",
+            "default": true,
+            "type": "boolean"
         }
     },
     "required": [
