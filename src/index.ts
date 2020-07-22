@@ -46,7 +46,7 @@ Apify.main(async () => {
         throw new Error('You must provide "cookieDomains" parameter');
     }
 
-    if (forceCloud === true) {
+    if (forceCloud === true && !Apify.isAtHome()) {
         if (sessionConfig.storageName) {
             delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
             process.env[ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID] =
