@@ -21,9 +21,9 @@ Apify.main(async () => {
         password,
         sessionConfig = {
             storageName: "login-sessions",
-            maxAgeSecs: 3600,
-            maxUsageCount: 100,
-            maxPoolSize: 100,
+            maxAgeSecs: 86400,
+            maxUsageCount: 10000,
+            maxPoolSize: 3,
         },
         forceCloud = true,
         username,
@@ -34,6 +34,7 @@ Apify.main(async () => {
         maxRequestRetries = 1,
         extraUrlPatterns = [],
         gotoTimeout = 30,
+        countryCode,
     } = input;
 
     if (!input.steps?.length) {
@@ -63,9 +64,12 @@ Apify.main(async () => {
         session: {},
     };
 
-    const proxyConfig = await Apify.createProxyConfiguration({
-        ...proxyConfiguration,
-    });
+    const proxyConfig = proxyConfiguration?.useApifyProxy
+        ? await Apify.createProxyConfiguration({
+            countryCode,
+            ...proxyConfiguration,
+          })
+        : undefined;
 
     const sessionPool = await Apify.openSessionPool({
         createSessionFunction: (pool) => {
@@ -107,9 +111,9 @@ Apify.main(async () => {
                     mockChromeInIframe: false,
                     mockDeviceMemory: false,
                 },
-                apifyProxySession: usedSession.id,
                 stealth: true,
                 args: [
+                    ...options.args,
                     "--disable-dev-shm-usage",
                     "--disable-setuid-sandbox",
                     "--disable-notifications",
@@ -334,6 +338,11 @@ Apify.main(async () => {
 
         log.info(`Session "${usedSession.id}" created`);
     } else {
+        await Apify.setValue("OUTPUT", {
+            session: null,
+            error: `Nothing created`,
+        });
+
         log.info(`Nothing created`);
 
         process.exit(1); // give an outside world hint that it failed

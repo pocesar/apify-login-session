@@ -19,7 +19,7 @@ You may call directly from your actor, or use the `INPUT.json` to create a task 
 // in your actor
 const storageName = 'session-example';
 
-const { session, error } = await Apify.call('pocesar/login-session', {
+const call = await Apify.call('pocesar/login-session', {
     username: 'username',
     password: 'password',
     website: [{ url: 'http://example.com' }], // the RequestList format
@@ -51,6 +51,12 @@ const { session, error } = await Apify.call('pocesar/login-session', {
     }]
 });
 
+const { session, error } = call.output;
+
+// if it fails, the error will be filled with something
+// otherwise, the session will have the Session parameters, that can be
+// instantiated manually using `new Apify.Session({ ...session, sessionPool })`
+
 // load the session pool from the storage, so it has our new
 // session. this might change in the future
 const sessionPool = await Apify.openSessionPool({
@@ -73,7 +79,9 @@ sessionJustCreated.userData.userAgent;
 
 /**
  * the proxyUrl used, can be empty.
- * Set this as your proxyUrl parameter in crawlers
+ * Set this as your proxyUrl parameter in crawlers.
+ *
+ * This might be undefined if you didn't use any proxies
  */
 sessionJustCreated.userData.proxyUrl;
 
@@ -90,6 +98,48 @@ sessionJustCreated.userData.sessionStorage;
 sessionJustCreated.userData.localStorage;
 
 ```
+
+## Login locally then use the session on the platform
+
+You can login locally, executing the login-session actor on your machine, make sure you're logged in to the platform using `apify login` and using `forceCloud` input option, like this:
+
+```jsonc
+{
+    "username": "username",
+    "password": "s3cr3tp4ssw0rd",
+    "website": [{ "url": "https://example.com/" }],
+    "sessionConfig": {
+        "storageName": "example-login-sessions" // need to use this
+    },
+    "steps": [
+        {
+            "username": { "selector": "#email" },
+            "password": { "selector": "#password" },
+            "submit": { "selector": "input[type=\"submit\"]" },
+            "success": { "selector": ".main-menu", "timeoutMillis": 10000 },
+            "failed": {
+                "selector": ".login.error",
+                "timeoutMillis": 10000
+            },
+            "waitForMillis": 30000
+        }
+    ],
+    "cookieDomains": ["https://example.com"],
+    "proxyConfiguration": {
+        "useApifyProxy": false
+    },
+    "forceCloud": true // this forces the login to be saved on platform Storage (https://my.apify.com/storage#/keyValueStores)
+}
+```
+
+Place this in your `apify_storage/key_value_stores/default/INPUT.json` file, then run locally:
+
+```
+$ apify run --purge
+```
+
+The session will be created in your Apify platform account, under the `storageName` you provided, but using your local IP.
+Using this, you're able to avoid PIN requests and security checkpoint screens.
 
 ## Input Recipes
 
@@ -248,7 +298,7 @@ Here are some real-life examples of INPUT.json that you may use:
 
 ### LinkedIn
 
-```json
+```jsonc
 {
     "username": "username",
     "password": "password",

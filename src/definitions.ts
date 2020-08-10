@@ -48,6 +48,7 @@ export interface Schema {
         useApifyProxy?: boolean;
         apifyProxyGroups?: string[];
     };
+    countryCode?: string;
 }
 
 export interface SessionUserData {

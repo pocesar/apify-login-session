@@ -51,9 +51,9 @@
             "type": "object",
             "default": {
                 "storageName": "login-sessions",
-                "maxAgeSecs": 3600,
-                "maxUsageCount": 100,
-                "maxPoolSize": 100
+                "maxAgeSecs": 86400,
+                "maxUsageCount": 10000,
+                "maxPoolSize": 1
             },
             "prefill": {
                 "storageName": "login-sessions",
@@ -125,6 +125,13 @@
             "description": "Use this when you execute the actor locally in your machine, but fills the session storage on the Apify platform",
             "default": true,
             "type": "boolean"
+        },
+        "countryCode": {
+            "title": "Proxy country",
+            "description": "Set the proxy country to pass to proxy configuration when using RESIDENTIALS",
+            "type": "string",
+            "editor": "textfield",
+            "nullable": true
         }
     },
     "required": [
