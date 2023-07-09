@@ -32,7 +32,7 @@
     },
     "homepage": "https://github.com/pocesar/apify-login-session#readme",
     "dependencies": {
-        "apify": "^0.21.3",
+        "apify": "^3.1.7",
         "ts-node": "^8.10.2",
         "typescript": "^3.9.7"
     },
